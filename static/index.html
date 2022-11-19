@@ -54,13 +54,37 @@ function drawCircle(context,entity) {
         var x = entity["x"];
         var y = entity["y"];
         var radius = 2;
-        //moveTo(x,y);
+        // moveTo(x,y);
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
 
         arc(x, y, radius, 0, 2.0 * Math.PI, false);  
         stroke();     
         fill()                                
+    }
+}
+
+function drawLine(context, entity, previousEntity, startPath) {
+    with(context) {
+        if (previousEntity["colour"] == entity["colour"]) {
+            save();
+            beginPath();
+            lineWidth = 4;
+            var x = entity["x"];
+            var y = entity["y"];
+            var xPrev = previousEntity["x"]
+            var yPrev = previousEntity["y"]
+            var radius = 2;
+            fillStyle = entity["colour"];
+            strokeStyle = fillStyle;
+            lineCap = "round";
+            lineJoin = "round";
+            moveTo(x, y);
+            lineTo(xPrev, yPrev);
+            stroke();
+            fill();
+            restore();
+        }
     }
 }
 
@@ -86,9 +110,18 @@ function clearFrame() {
 // This actually draws the frame
 function renderFrame() {
     clearFrame();
+    let previousEntity = null;
+    let startPath = false;
     for (var key in world) {
         var entity = world[key];
-        drawCircle(context,prepEntity(entity));
+        
+        if (previousEntity) {
+            var preppedEnt = prepEntity(entity);
+            var preppedPrev = prepEntity(previousEntity);
+            if (preppedPrev["path"] !== "end")
+                drawLine(context, preppedEnt, preppedPrev, startPath);
+        }
+        previousEntity = entity;
     }
 }
 
@@ -247,16 +280,16 @@ mouse = (function() {
 
 // Add the application specific mouse listeners!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':randomColor});
+    addEntityWithoutName({'x':x,'y':y,'colour':randomColor, 'path': 'start'});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':randomColor});
+    addEntityWithoutName({'x':x,'y':y,'colour':randomColor, 'path': 'end'});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
     addEntityWithoutName({'x':x,'y':y,'colour':randomColor,
-                          'radius':10});
+                          'radius':10, 'path': 'dragging'});
 });
 
 
